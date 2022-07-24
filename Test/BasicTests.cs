@@ -7,22 +7,22 @@ using Xunit.Abstractions;
 
 namespace Test;
 
-public class UnitTest1
+public class BasicTests
 {
     private readonly ITestOutputHelper output;
 
-    public UnitTest1(ITestOutputHelper output)
+    public BasicTests(ITestOutputHelper output)
     {
         this.output = output;
         Console.SetOut(new Converter(output));
     }
 
     [Fact]
-    public async Task Test1()
+    public async Task RetryThenSuccess()
     {
-        // using var httpTest = new HttpTest();
-        // httpTest.RespondWith("", status: 500);
-        // httpTest.RespondWith("", status: 200);
+        using var httpTest = new HttpTest();
+        httpTest.RespondWith("", status: 500);
+        httpTest.RespondWith("", status: 200);
         var x = new Url("http://localhost:5102").WithRetry();
 
         output.WriteLine("type of handler: " + x.Client.HttpMessageHandler.ToString());
@@ -32,7 +32,7 @@ public class UnitTest1
     }
     private class Converter : TextWriter
     {
-        ITestOutputHelper _output;
+        readonly ITestOutputHelper _output;
         public Converter(ITestOutputHelper output)
         {
             _output = output;
@@ -41,11 +41,11 @@ public class UnitTest1
         {
             get { return Encoding.ASCII; }
         }
-        public override void WriteLine(string message)
+        public override void WriteLine(string? message)
         {
             _output.WriteLine(message);
         }
-        public override void WriteLine(string format, params object[] args)
+        public override void WriteLine(string? format, params object?[] args)
         {
             _output.WriteLine(format, args);
         }

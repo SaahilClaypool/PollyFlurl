@@ -5,61 +5,27 @@ using IFlurlHttpClientFactory = Flurl.Http.Configuration.IHttpClientFactory;
 namespace Polly.Flurl;
 public static class PollyFlurlExtensions
 {
-    static readonly HashSet<HttpStatusCode> HTTPTransientErrorStatusCodes = new()
+    static readonly HashSet<int> HTTPTransientErrorStatusCodes = new()
     {
-        HttpStatusCode.RequestTimeout,
-        HttpStatusCode.BadGateway,
-        HttpStatusCode.GatewayTimeout,
-        HttpStatusCode.ServiceUnavailable,
+        (int)HttpStatusCode.InternalServerError,
+        (int)HttpStatusCode.RequestTimeout,
+        (int)HttpStatusCode.BadGateway,
+        (int)HttpStatusCode.GatewayTimeout,
+        (int)HttpStatusCode.ServiceUnavailable,
     };
-    public static IFlurlRequest WithPolicy(this string request, IAsyncPolicy<HttpResponseMessage> policy) => WithPolicy(new Url(request), policy);
-    public static IFlurlRequest WithPolicy(this Url request, IAsyncPolicy<HttpResponseMessage> policy) => WithPolicy(new FlurlRequest(request), policy);
-    public static IFlurlRequest WithPolicy(this IFlurlRequest request, IAsyncPolicy<HttpResponseMessage> policy)
+
+    public static IFlurlRequest WithPolicy(this string request, IAsyncPolicy<IFlurlResponse> policy) => WithPolicy(new Url(request), policy);
+    public static IFlurlRequest WithPolicy(this Url request, IAsyncPolicy<IFlurlResponse> policy) => WithPolicy(new FlurlRequest(request), policy);
+    public static IFlurlRequest WithPolicy(this IFlurlRequest request, IAsyncPolicy<IFlurlResponse> policy)
     {
-        request.Client.Configure(context =>
-        {
-            context.HttpClientFactory = new PollyHttpClientFactory(context.HttpClientFactory, policy);
-        });
-        return request;
+        return new PollyRequest(request, policy);
     }
 
     public static IFlurlRequest WithRetry(this string request) => WithRetry(new Url(request));
     public static IFlurlRequest WithRetry(this Url request) => WithRetry(new FlurlRequest(request));
     public static IFlurlRequest WithRetry(this IFlurlRequest request) =>
         WithPolicy(request, Policy
-            .Handle<HttpRequestException>()
-            .Or<TaskCanceledException>()
-            .OrResult<HttpResponseMessage>(response => !response.IsSuccessStatusCode &&
-                HTTPTransientErrorStatusCodes.Contains(response.StatusCode)
-            )
+            .Handle<FlurlHttpException>(ex => ex.StatusCode is not null && HTTPTransientErrorStatusCodes.Contains(ex.StatusCode.Value))
+            .OrResult<IFlurlResponse>(r => false)
             .RetryAsync());
-}
-
-internal class PollyHttpClientFactory : IFlurlHttpClientFactory
-{
-    private readonly IFlurlHttpClientFactory baseFactory;
-    private readonly IAsyncPolicy<HttpResponseMessage> policy;
-
-    public PollyHttpClientFactory(IFlurlHttpClientFactory baseFactory, IAsyncPolicy<HttpResponseMessage> policy)
-    {
-        this.baseFactory = baseFactory;
-        this.policy = policy;
-    }
-
-    public HttpClient CreateHttpClient(HttpMessageHandler handler)
-    {
-        var pollyHandler = new PolicyHttpMessageHandler(policy)
-        {
-            InnerHandler = handler
-        };
-        return baseFactory.CreateHttpClient(pollyHandler);
-    }
-
-    public HttpMessageHandler CreateMessageHandler()
-    {
-        return new PolicyHttpMessageHandler(policy)
-        {
-            InnerHandler = baseFactory.CreateMessageHandler()
-        };
-    }
 }
