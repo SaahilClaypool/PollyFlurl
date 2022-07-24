@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PollyFlurl", "PollyFlurl\PollyFlurl.csproj", "{58727EDB-91F8-4F70-BF14-80E9A680DEAA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{7622B0FB-7D25-4F17-8ED6-68F1DE4CA165}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{58727EDB-91F8-4F70-BF14-80E9A680DEAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58727EDB-91F8-4F70-BF14-80E9A680DEAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58727EDB-91F8-4F70-BF14-80E9A680DEAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58727EDB-91F8-4F70-BF14-80E9A680DEAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7622B0FB-7D25-4F17-8ED6-68F1DE4CA165}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7622B0FB-7D25-4F17-8ED6-68F1DE4CA165}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7622B0FB-7D25-4F17-8ED6-68F1DE4CA165}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7622B0FB-7D25-4F17-8ED6-68F1DE4CA165}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
