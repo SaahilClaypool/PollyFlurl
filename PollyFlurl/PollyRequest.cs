@@ -4,27 +4,67 @@ using Flurl.Util;
 namespace Polly.Flurl;
 public class PollyRequest : IFlurlRequest
 {
-    private readonly IFlurlRequest originalRequest;
+    private readonly IFlurlRequest innerRequest;
     private readonly IAsyncPolicy<IFlurlResponse> policy;
 
-    public PollyRequest(IFlurlRequest originalRequest, IAsyncPolicy<IFlurlResponse> policy)
+    public PollyRequest(IFlurlRequest innerRequest, IAsyncPolicy<IFlurlResponse> policy)
     {
-        this.originalRequest = originalRequest;
+        this.innerRequest = innerRequest;
         this.policy = policy;
     }
-    public IFlurlClient Client { get => originalRequest.Client; set => originalRequest.Client = value; }
-    public HttpMethod Verb { get => originalRequest.Verb; set => originalRequest.Verb = value; }
-    public Url Url { get => originalRequest.Url; set => originalRequest.Url = value; }
+    public IFlurlClient Client { get => innerRequest.Client; set => innerRequest.Client = value; }
+    public HttpMethod Verb { get => innerRequest.Verb; set => innerRequest.Verb = value; }
+    public Url Url { get => innerRequest.Url; set => innerRequest.Url = value; }
 
-    public IEnumerable<(string Name, string Value)> Cookies => originalRequest.Cookies;
+    public IEnumerable<(string Name, string Value)> Cookies => innerRequest.Cookies;
 
-    public CookieJar CookieJar { get => originalRequest.CookieJar; set => originalRequest.CookieJar = value; }
-    public FlurlHttpSettings Settings { get => originalRequest.Settings; set => originalRequest.Settings = value; }
+    public CookieJar CookieJar { get => innerRequest.CookieJar; set => innerRequest.CookieJar = value; }
+    public FlurlHttpSettings Settings { get => innerRequest.Settings; set => innerRequest.Settings = value; }
 
-    public INameValueList<string> Headers => originalRequest.Headers;
+    public INameValueList<string> Headers => innerRequest.Headers;
 
     public Task<IFlurlResponse> SendAsync(HttpMethod verb, HttpContent content = null, CancellationToken cancellationToken = default, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead)
     {
-        return policy.ExecuteAsync(() => originalRequest.SendAsync(verb, content, cancellationToken, completionOption));
+        return policy.ExecuteAsync(() => innerRequest.SendAsync(verb, content, cancellationToken, completionOption));
+    }
+}
+
+public class PollyHttpResponseRequest : IFlurlRequest
+{
+    private readonly IFlurlRequest innerRequest;
+    private readonly IAsyncPolicy<HttpResponseMessage> policy;
+
+    public PollyHttpResponseRequest(IFlurlRequest innerRequest, IAsyncPolicy<HttpResponseMessage> policy)
+    {
+        this.innerRequest = innerRequest;
+        this.policy = policy;
+    }
+    public IFlurlClient Client { get => innerRequest.Client; set => innerRequest.Client = value; }
+    public HttpMethod Verb { get => innerRequest.Verb; set => innerRequest.Verb = value; }
+    public Url Url { get => innerRequest.Url; set => innerRequest.Url = value; }
+
+    public IEnumerable<(string Name, string Value)> Cookies => innerRequest.Cookies;
+
+    public CookieJar CookieJar { get => innerRequest.CookieJar; set => innerRequest.CookieJar = value; }
+    public FlurlHttpSettings Settings { get => innerRequest.Settings; set => innerRequest.Settings = value; }
+
+    public INameValueList<string> Headers => innerRequest.Headers;
+
+    public async Task<IFlurlResponse> SendAsync(HttpMethod verb, HttpContent content = null, CancellationToken cancellationToken = default, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead)
+    {
+        var response = await policy.ExecuteAsync(async () =>
+        {
+            try
+            {
+                var response = await innerRequest.SendAsync(verb, content, cancellationToken, completionOption);
+                return response.ResponseMessage;
+            }
+            catch (FlurlHttpException ex)
+            {
+                return ex.Call.Response.ResponseMessage;
+            }
+        });
+
+        return new FlurlResponse(response);
     }
 }
