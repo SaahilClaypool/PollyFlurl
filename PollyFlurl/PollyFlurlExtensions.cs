@@ -1,9 +1,17 @@
-﻿using Microsoft.Extensions.Http;
+﻿using System.Net;
+using Microsoft.Extensions.Http;
 using IFlurlHttpClientFactory = Flurl.Http.Configuration.IHttpClientFactory;
 
 namespace Polly.Flurl;
 public static class PollyFlurlExtensions
 {
+    static readonly HashSet<HttpStatusCode> HTTPTransientErrorStatusCodes = new()
+    {
+        HttpStatusCode.RequestTimeout,
+        HttpStatusCode.BadGateway,
+        HttpStatusCode.GatewayTimeout,
+        HttpStatusCode.ServiceUnavailable,
+    };
     public static IFlurlRequest WithPolicy(this string request, IAsyncPolicy<HttpResponseMessage> policy) => WithPolicy(new Url(request), policy);
     public static IFlurlRequest WithPolicy(this Url request, IAsyncPolicy<HttpResponseMessage> policy) => WithPolicy(new FlurlRequest(request), policy);
     public static IFlurlRequest WithPolicy(this IFlurlRequest request, IAsyncPolicy<HttpResponseMessage> policy)
@@ -15,9 +23,16 @@ public static class PollyFlurlExtensions
         return request;
     }
 
-    public static IFlurlRequest WithPolicy(this string request, IAsyncPolicy policy) => WithPolicy(new Url(request), policy);
-    public static IFlurlRequest WithPolicy(this Url request, IAsyncPolicy policy) => WithPolicy(new FlurlRequest(request), policy);
-    public static IFlurlRequest WithPolicy(this IFlurlRequest request, IAsyncPolicy policy) => WithPolicy(request, policy.AsAsyncPolicy<HttpResponseMessage>());
+    public static IFlurlRequest WithRetry(this string request) => WithRetry(new Url(request));
+    public static IFlurlRequest WithRetry(this Url request) => WithRetry(new FlurlRequest(request));
+    public static IFlurlRequest WithRetry(this IFlurlRequest request) =>
+        WithPolicy(request, Policy
+            .Handle<HttpRequestException>()
+            .Or<TaskCanceledException>()
+            .OrResult<HttpResponseMessage>(response => !response.IsSuccessStatusCode &&
+                HTTPTransientErrorStatusCodes.Contains(response.StatusCode)
+            )
+            .RetryAsync());
 }
 
 internal class PollyHttpClientFactory : IFlurlHttpClientFactory
