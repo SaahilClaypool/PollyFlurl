@@ -3,7 +3,7 @@ using Flurl.Util;
 
 namespace Polly.Flurl;
 
-public abstract class RequestWrapper : IFlurlRequest
+internal abstract class RequestWrapper : IFlurlRequest
 {
     protected readonly IFlurlRequest innerRequest;
 
@@ -25,7 +25,8 @@ public abstract class RequestWrapper : IFlurlRequest
     public abstract Task<IFlurlResponse> SendAsync(HttpMethod verb, HttpContent? content = null, CancellationToken cancellationToken = default, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead);
 }
 
-public class PollyRequestFlurlResponse : RequestWrapper
+/// <summary> Wrap a flurl request policy</summary>
+internal class PollyRequestFlurlResponse : RequestWrapper
 {
     private readonly IAsyncPolicy<IFlurlResponse> policy;
 
@@ -40,7 +41,8 @@ public class PollyRequestFlurlResponse : RequestWrapper
     }
 }
 
-public class PollyRequest : RequestWrapper
+/// <summary> Wrap a generic policy </summary>
+internal class PollyRequest : RequestWrapper
 {
     private readonly IAsyncPolicy policy;
 
@@ -54,7 +56,8 @@ public class PollyRequest : RequestWrapper
     }
 }
 
-public class PollyHttpResponseRequest : RequestWrapper
+/// <summary> Wrap a http response policy </summary>
+internal class PollyHttpResponseRequest : RequestWrapper
 {
     private readonly IAsyncPolicy<HttpResponseMessage> policy;
 
