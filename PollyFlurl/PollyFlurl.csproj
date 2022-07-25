@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>Polly.Flurl</PackageId>
-    <Version>0.0.1</Version>
+    <LangVersion>10.0</LangVersion>
+    <Version>0.0.2</Version>
     <Authors>Saahil Claypool</Authors>
     <Company>Personal</Company>
     <PackageReadmeFile>README.md</PackageReadmeFile>
