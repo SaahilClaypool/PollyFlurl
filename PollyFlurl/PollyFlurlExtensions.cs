@@ -26,6 +26,13 @@ public static class PollyFlurlExtensions
     public static IFlurlRequest WithPolicy(this Url request, IAsyncPolicy<IFlurlResponse> policy) => WithPolicy(new FlurlRequest(request), policy);
     public static IFlurlRequest WithPolicy(this IFlurlRequest request, IAsyncPolicy<IFlurlResponse> policy)
     {
+        return new PollyRequestFlurlResponse(request, policy);
+    }
+
+    public static IFlurlRequest WithPolicy(this string request, IAsyncPolicy policy) => WithPolicy(new Url(request), policy);
+    public static IFlurlRequest WithPolicy(this Url request, IAsyncPolicy policy) => WithPolicy(new FlurlRequest(request), policy);
+    public static IFlurlRequest WithPolicy(this IFlurlRequest request, IAsyncPolicy policy)
+    {
         return new PollyRequest(request, policy);
     }
 

@@ -2,15 +2,14 @@ using Flurl.Http.Configuration;
 using Flurl.Util;
 
 namespace Polly.Flurl;
-public class PollyRequest : IFlurlRequest
-{
-    private readonly IFlurlRequest innerRequest;
-    private readonly IAsyncPolicy<IFlurlResponse> policy;
 
-    public PollyRequest(IFlurlRequest innerRequest, IAsyncPolicy<IFlurlResponse> policy)
+public abstract class RequestWrapper : IFlurlRequest
+{
+    protected readonly IFlurlRequest innerRequest;
+
+    public RequestWrapper(IFlurlRequest innerRequest)
     {
         this.innerRequest = innerRequest;
-        this.policy = policy;
     }
     public IFlurlClient Client { get => innerRequest.Client; set => innerRequest.Client = value; }
     public HttpMethod Verb { get => innerRequest.Verb; set => innerRequest.Verb = value; }
@@ -23,34 +22,48 @@ public class PollyRequest : IFlurlRequest
 
     public INameValueList<string> Headers => innerRequest.Headers;
 
-    public Task<IFlurlResponse> SendAsync(HttpMethod verb, HttpContent content = null, CancellationToken cancellationToken = default, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead)
+    public abstract Task<IFlurlResponse> SendAsync(HttpMethod verb, HttpContent? content = null, CancellationToken cancellationToken = default, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead);
+}
+
+public class PollyRequestFlurlResponse : RequestWrapper
+{
+    private readonly IAsyncPolicy<IFlurlResponse> policy;
+
+    public PollyRequestFlurlResponse(IFlurlRequest innerRequest, IAsyncPolicy<IFlurlResponse> policy) : base(innerRequest)
+    {
+        this.policy = policy;
+    }
+
+    public override Task<IFlurlResponse> SendAsync(HttpMethod verb, HttpContent? content = null, CancellationToken cancellationToken = default, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead)
     {
         return policy.ExecuteAsync(() => innerRequest.SendAsync(verb, content, cancellationToken, completionOption));
     }
 }
 
-public class PollyHttpResponseRequest : IFlurlRequest
+public class PollyRequest : RequestWrapper
 {
-    private readonly IFlurlRequest innerRequest;
-    private readonly IAsyncPolicy<HttpResponseMessage> policy;
+    private readonly IAsyncPolicy policy;
 
-    public PollyHttpResponseRequest(IFlurlRequest innerRequest, IAsyncPolicy<HttpResponseMessage> policy)
+    public PollyRequest(IFlurlRequest innerRequest, IAsyncPolicy policy) : base(innerRequest)
     {
-        this.innerRequest = innerRequest;
         this.policy = policy;
     }
-    public IFlurlClient Client { get => innerRequest.Client; set => innerRequest.Client = value; }
-    public HttpMethod Verb { get => innerRequest.Verb; set => innerRequest.Verb = value; }
-    public Url Url { get => innerRequest.Url; set => innerRequest.Url = value; }
+    public override Task<IFlurlResponse> SendAsync(HttpMethod verb, HttpContent? content = null, CancellationToken cancellationToken = default, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead)
+    {
+        return policy.ExecuteAsync(() => innerRequest.SendAsync(verb, content, cancellationToken, completionOption));
+    }
+}
 
-    public IEnumerable<(string Name, string Value)> Cookies => innerRequest.Cookies;
+public class PollyHttpResponseRequest : RequestWrapper
+{
+    private readonly IAsyncPolicy<HttpResponseMessage> policy;
 
-    public CookieJar CookieJar { get => innerRequest.CookieJar; set => innerRequest.CookieJar = value; }
-    public FlurlHttpSettings Settings { get => innerRequest.Settings; set => innerRequest.Settings = value; }
+    public PollyHttpResponseRequest(IFlurlRequest innerRequest, IAsyncPolicy<HttpResponseMessage> policy) : base(innerRequest)
+    {
+        this.policy = policy;
+    }
 
-    public INameValueList<string> Headers => innerRequest.Headers;
-
-    public async Task<IFlurlResponse> SendAsync(HttpMethod verb, HttpContent content = null, CancellationToken cancellationToken = default, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead)
+    public override async Task<IFlurlResponse> SendAsync(HttpMethod verb, HttpContent? content = null, CancellationToken cancellationToken = default, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead)
     {
         var response = await policy.ExecuteAsync(async () =>
         {
