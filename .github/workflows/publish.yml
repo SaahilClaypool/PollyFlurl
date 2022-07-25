@@ -20,9 +20,15 @@ jobs:
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
+      - name: Restore
+        run: dotnet restore
       - name: Test
-        run: dotnet test
-      - name: Pack
-        run: dotnet pack
+        run: dotnet test --no-restore
+      - name: Clean
+        run: |
+          dotnet clean
+          find . -name "*.nupkg" | xargs -I{} rm {}
+      - name: Build (builds package)
+        run: dotnet build --configuration Release --no-restore
       - name: Push to nuget
         run: dotnet nuget push  "**/*.nupkg" -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
