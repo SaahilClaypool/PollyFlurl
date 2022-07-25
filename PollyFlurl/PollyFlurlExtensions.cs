@@ -1,6 +1,4 @@
 ﻿using System.Net;
-using Microsoft.Extensions.Http;
-using IFlurlHttpClientFactory = Flurl.Http.Configuration.IHttpClientFactory;
 
 namespace Polly.Flurl;
 public static class PollyFlurlExtensions
@@ -34,9 +32,9 @@ public static class PollyFlurlExtensions
         HttpStatusCode.GatewayTimeout // 504
     };
 
-    public static IFlurlRequest WithRetry(this string request) => WithRetry(new Url(request));
-    public static IFlurlRequest WithRetry(this Url request) => WithRetry(new FlurlRequest(request));
-    public static IFlurlRequest WithRetry(this IFlurlRequest request) =>
+    public static IFlurlRequest RetryTransientErrors(this string request) => RetryTransientErrors(new Url(request));
+    public static IFlurlRequest RetryTransientErrors(this Url request) => RetryTransientErrors(new FlurlRequest(request));
+    public static IFlurlRequest RetryTransientErrors(this IFlurlRequest request) =>
         WithPolicy(request,
             Policy
                 .Handle<HttpRequestException>()

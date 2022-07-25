@@ -21,7 +21,28 @@ public class BasicTests
         httpTest.RespondWith("", status: 500);
         httpTest.RespondWith("", status: 200);
 
-        var response = await "http://www.google.com".WithRetry().GetAsync();
+        var response = await "http://www.google.com".RetryTransientErrors().GetAsync();
+        response.StatusCode.Should().Be(200);
+    }
+
+    [Fact]
+    public async Task CustomPolicy_HandleHTTPResponseMessage()
+    {
+        using var httpTest = new HttpTest();
+        httpTest.RespondWith("Bad Request", status: 500);
+        httpTest.RespondWith("", status: 200);
+
+        var policy = Policy
+            .HandleResult<HttpResponseMessage>(message =>
+            {
+                var content = message.Content.ReadAsStringAsync().Result;
+                return content == "Bad Request";
+            })
+            .RetryAsync();
+
+        var response = await "http://www.google.com"
+            .WithPolicy(policy)
+            .GetAsync();
         response.StatusCode.Should().Be(200);
     }
 
