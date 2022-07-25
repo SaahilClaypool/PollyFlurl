@@ -2,7 +2,7 @@ using System.Net;
 using System.Text;
 using Flurl.Http.Testing;
 using Polly;
-using Polly.Flurl;
+using PollyFlurl;
 using Xunit.Abstractions;
 
 namespace Test;

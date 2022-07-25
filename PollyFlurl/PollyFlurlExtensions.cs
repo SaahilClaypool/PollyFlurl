@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace Polly.Flurl;
+namespace PollyFlurl;
 public static class PollyFlurlExtensions
 {
     public static IFlurlRequest WithPolicy(this string request, IAsyncPolicy<IFlurlResponse> policy) => WithPolicy(new Url(request), policy);

@@ -1,7 +1,7 @@
 using Flurl.Http.Configuration;
 using Flurl.Util;
 
-namespace Polly.Flurl;
+namespace PollyFlurl;
 
 internal abstract class RequestWrapper : IFlurlRequest
 {
