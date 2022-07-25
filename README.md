@@ -33,4 +33,3 @@ See [Basic Tests](./Test/BasicTests.cs) for more examples.
 
 - Option for global configuration (asp.net core http client factory)
     - Create a custom factory that supports injecting a flurl 
-- Using HTTPResponseMessages instead of Flurl specific ones (optional)
