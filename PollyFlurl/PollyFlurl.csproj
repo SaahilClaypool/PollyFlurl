@@ -7,7 +7,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>PollyFlurl</PackageId>
     <LangVersion>10.0</LangVersion>
-    <Version>0.0.3</Version>
+    <Version>0.0.4-pre</Version>
     <Authors>Saahil Claypool</Authors>
     <Company>Personal</Company>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\" />
-    <PackageReference Include="Flurl.Http" Version="3.2.4" />
+    <PackageReference Include="Flurl.Http" Version="4.0.0-pre2" />
     <PackageReference Include="Polly" Version="7.2.3" />
   </ItemGroup>
 
