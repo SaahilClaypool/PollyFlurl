@@ -9,16 +9,20 @@
 
 
 ```cs
-var policy = Policy
-    .HandleResult<HttpResponseMessage>(message =>
+var pipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
+    .AddRetry(new RetryStrategyOptions<HttpResponseMessage>()
     {
-        var content = message.Content.ReadAsStringAsync().Result;
-        return content == "Bad Request";
+        ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+            .HandleResult(message =>
+            {
+                var content = message.Content.ReadAsStringAsync().Result;
+                return content == "Bad Request";
+            })
     })
-    .RetryAsync();
+    .Build();
 
 var response = await "http://www.google.com"
-    .WithPolicy(policy)
+    .WithPipeline(pipeline)
     .GetAsync();
 response.StatusCode.Should().Be(200);
 
